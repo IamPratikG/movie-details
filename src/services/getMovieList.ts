@@ -38,15 +38,14 @@ export const fetchMovies = (
   console.log(`/fetchMovies called with ===> ${searchString}`);
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      if (Math.random() < 0.1) {
+      if (Math.random() < 0.01) {
         console.log("Error scenario");
         reject({ status: 500, message: "Internal Server Error" });
       } else {
         const movies = searchString
           ? searchMovies(searchString)
           : (mockMovieData as Movie[]);
-        console.log("Success ===> ");
-        console.log(movies);
+        console.log("Successfully Fetched");
         resolve({
           data: movies,
           status: 200,

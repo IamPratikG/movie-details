@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMovies } from "../MoviesContext";
+import debounce from "lodash/debounce";
 
 const SearchContainer = styled.div`
   display: flex;
@@ -16,48 +17,50 @@ const SearchInput = styled.input`
   width: 250px;
 `;
 
-const SearchButton = styled.button`
-  padding: 8px 12px;
-  background-color: #0070f3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  margin-left: 8px;
-  cursor: pointer;
-  font-size: 16px;
-
-  &:hover {
-    background-color: #0060df;
-  }
-`;
-
 const SearchBox: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { searchMovies } = useMovies();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleSearch = useCallback(async () => {
-    if (searchTerm.trim()) {
-      try {
-        await searchMovies(searchTerm.trim());
-        if (location.pathname !== "/home") {
-          navigate("/home");
+  const debouncedSearch = useMemo(
+    () =>
+      debounce(async (term: string) => {
+        if (term.trim()) {
+          try {
+            await searchMovies(term.trim());
+            if (location.pathname !== "/home") {
+              navigate("/home");
+            }
+          } catch (error) {
+            console.error("Search failed:", error);
+          }
         }
-      } catch (error) {
-        console.error("Search failed:", error);
-      }
-    }
-  }, [searchTerm, searchMovies, navigate, location.pathname]);
-
-  const handleKeyPress = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        handleSearch();
-      }
-    },
-    [handleSearch]
+      }, 300),
+    [searchMovies, navigate, location.pathname]
   );
+
+  useEffect(() => {
+    debouncedSearch(searchTerm);
+
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [searchTerm, debouncedSearch]);
+
+  useEffect(() => {
+    if (
+      location.pathname.startsWith("/movie/") ||
+      location.pathname === "/favorites"
+    ) {
+      setSearchTerm("");
+      debouncedSearch.cancel();
+    }
+  }, [location.pathname, debouncedSearch]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
 
   return (
     <SearchContainer>
@@ -65,10 +68,8 @@ const SearchBox: React.FC = () => {
         type="text"
         placeholder="Search movies..."
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        onKeyUp={handleKeyPress}
+        onChange={handleInputChange}
       />
-      <SearchButton onClick={handleSearch}>Search</SearchButton>
     </SearchContainer>
   );
 };

@@ -1,7 +1,7 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Movie } from '../MoviesContext';
-import MovieCard from './MovieCard';
+import React, { useMemo } from "react";
+import styled from "styled-components";
+import { Movie } from "../MoviesContext";
+import MovieCard from "./MovieCard";
 
 const ListContainer = styled.div`
   display: grid;
@@ -16,14 +16,14 @@ interface ListProps {
   movies: Movie[];
 }
 
-const List: React.FC<ListProps> = ({ movies }) => {
-  return (
-    <ListContainer>
-      {movies.map((movie) => (
-        <MovieCard key={movie.id} movie={movie} />
-      ))}
-    </ListContainer>
-  );
-};
+const List: React.FC<ListProps> = React.memo(function List({
+  movies,
+}: ListProps) {
+  const memoizedMovieCards = useMemo(() => {
+    return movies.map((movie) => <MovieCard key={movie.id} movie={movie} />);
+  }, [movies]);
+
+  return <ListContainer>{memoizedMovieCards}</ListContainer>;
+});
 
 export default List;
