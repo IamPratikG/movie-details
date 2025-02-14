@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useParams } from "react-router-dom";
 import { useMovies } from "../MoviesContext";
+import { Movie } from "../types/Movie";
+import Button from "./common/styledButton";
+import Loader from "./Loader";
 
 const MovieDetailContainer = styled.div`
   display: flex;
@@ -42,62 +45,54 @@ const MovieInfo = styled.div`
 const Title = styled.h1`
   font-size: 2.5rem;
   margin-bottom: 1rem;
-  color: #333;
 `;
 
 const InfoItem = styled.p`
   font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  color: #555;
 `;
 
 const Description = styled.p`
   font-size: 1.1rem;
-  line-height: 1.6;
-  color: #444;
-  margin-top: 1rem;
 `;
 
-const GenreList = styled.ul`
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-`;
-
-const GenreItem = styled.li`
-  background-color: #e0e0e0;
-  padding: 0.3rem 0.8rem;
-  border-radius: 16px;
-  font-size: 0.9rem;
-  color: #333;
-`;
-
-const FavoriteButton = styled.button`
-  padding: 8px 12px;
-  background-color: #0070f3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  margin-top: 10px;
-  cursor: pointer;
-  font-size: 16px;
-
-  &:hover {
-    background-color: #0060df;
-  }
+const ErrorText = styled.div`
+  font-size: 1.5rem;
 `;
 
 const MovieDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { getMovieById, addToFavorites, removeFromFavorites, isFavorite } =
     useMovies();
-  const movie = getMovieById(Number(id));
 
-  if (!movie) {
-    return <div>Movie not found</div>;
-  }
+  const [movie, setMovie] = useState<Movie | null | undefined>();
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMovieDetails = async () => {
+      if (id) {
+        try {
+          const fetchedMovie = await getMovieById(Number(id));
+          if (!fetchedMovie) {
+            console.error(`Movie with ID ${id} not found.`);
+          }
+          setMovie(fetchedMovie || null);
+        } catch (error) {
+          console.error("Error fetching movie details:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchMovieDetails();
+
+    return () => setLoading(false);
+  }, [id, getMovieById]);
+
+  if (loading) return <Loader />;
+
+  if (!movie) return <ErrorText>Movie not found!</ErrorText>;
 
   const handleFavoriteClick = () => {
     if (isFavorite(movie.id)) {
@@ -135,15 +130,17 @@ const MovieDetail: React.FC = () => {
         <InfoItem>
           <strong>Cast:</strong> {movie.cast.join(", ")}
         </InfoItem>
-        <GenreList>
-          {movie.genres.map((genre, index) => (
-            <GenreItem key={index}>{genre}</GenreItem>
-          ))}
-        </GenreList>
-        <Description>{movie.description}</Description>
-        <FavoriteButton onClick={handleFavoriteClick}>
+        {/* Updated Genre List */}
+        <InfoItem>
+          <strong>Genre:</strong> {movie.genres.join(", ")}
+        </InfoItem>
+        <Description>
+          <strong>Plot:</strong>
+          {` ${movie.description}`}
+        </Description>
+        <Button onClick={handleFavoriteClick}>
           {isFavorite(movie.id) ? "Remove from Favorites" : "Add to Favorites"}
-        </FavoriteButton>
+        </Button>
       </MovieInfo>
     </MovieDetailContainer>
   );

@@ -6,7 +6,9 @@ import React, {
   useCallback,
   useEffect,
 } from "react";
-import { Movie, fetchMovies } from "./services/getMovieList";
+import { fetchMovieById } from "./services/getMovieById";
+import { fetchMovies } from "./services/getMovieList";
+import { Movie } from "./types/Movie";
 
 type MoviesContextType = {
   movies: Movie[];
@@ -14,12 +16,15 @@ type MoviesContextType = {
   favorites: Movie[];
   loading: boolean;
   hasSearched: boolean;
+  currentPage: number;
+  itemsPerPage: number;
   searchMovies: (searchString: string) => Promise<void>;
   clearMovies: () => void;
-  getMovieById: (id: number) => Movie | undefined;
+  getMovieById: (id: number) => Promise<Movie | undefined>;
   addToFavorites: (movie: Movie) => void;
   removeFromFavorites: (movieId: number) => void;
   isFavorite: (movieId: number) => boolean;
+  setCurrentPage: (page: number) => void;
 };
 
 const MoviesContext = createContext<MoviesContextType>({
@@ -28,12 +33,15 @@ const MoviesContext = createContext<MoviesContextType>({
   favorites: [],
   loading: false,
   hasSearched: false,
+  currentPage: 1,
+  itemsPerPage: 8,
   searchMovies: async () => {},
   clearMovies: () => {},
-  getMovieById: () => undefined,
+  getMovieById: async () => undefined,
   addToFavorites: () => {},
   removeFromFavorites: () => {},
   isFavorite: () => false,
+  setCurrentPage: () => {},
 });
 
 export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -43,6 +51,8 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
   const [favorites, setFavorites] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   useEffect(() => {
     const storedFavorites = localStorage.getItem("favorites");
@@ -53,7 +63,7 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const movieMap = useMemo(() => {
     const map: Record<number, Movie> = {};
-    movies.forEach((movie: Movie) => {
+    movies.forEach((movie) => {
       map[movie.id] = movie;
     });
     return map;
@@ -65,6 +75,7 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
       const response = await fetchMovies(searchString);
       setMovies(response.data);
       setHasSearched(true);
+      setCurrentPage(1);
     } catch (error) {
       console.log(error);
       throw error;
@@ -76,11 +87,21 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
   const clearMovies = useCallback(() => {
     setMovies([]);
     setHasSearched(false);
+    setCurrentPage(1);
   }, []);
 
   const getMovieById = useCallback(
-    (id: number) => {
-      return movieMap[id];
+    async (id: number): Promise<Movie | undefined> => {
+      if (movieMap[id]) return movieMap[id];
+
+      try {
+        const fetchedMovie = await fetchMovieById(id);
+        setMovies((prev) => [...prev, fetchedMovie as Movie]);
+        return fetchedMovie;
+      } catch (error) {
+        console.error(`Error fetching movie with ID ${id}:`, error);
+        return undefined;
+      }
     },
     [movieMap]
   );
@@ -102,9 +123,7 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const isFavorite = useCallback(
-    (movieId: number) => {
-      return favorites.some((m) => m.id === movieId);
-    },
+    (movieId: number) => favorites.some((m) => m.id === movieId),
     [favorites]
   );
 
@@ -115,12 +134,15 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
       favorites,
       loading,
       hasSearched,
+      currentPage,
+      itemsPerPage,
       searchMovies,
       clearMovies,
       getMovieById,
       addToFavorites,
       removeFromFavorites,
       isFavorite,
+      setCurrentPage,
     }),
     [
       movies,
@@ -128,6 +150,7 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
       favorites,
       loading,
       hasSearched,
+      currentPage,
       searchMovies,
       clearMovies,
       getMovieById,
@@ -143,5 +166,3 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
 };
 
 export const useMovies = () => useContext(MoviesContext);
-
-export type { Movie };

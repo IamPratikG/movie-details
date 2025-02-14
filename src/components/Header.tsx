@@ -5,6 +5,9 @@ import SearchBox from "./SearchBox";
 import { useMovies } from "../MoviesContext";
 
 const StyledHeader = styled.header`
+  position: sticky;
+  top: 0;
+  z-index: 1000;
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1rem 2rem;
@@ -33,6 +36,7 @@ const Nav = styled.nav`
 const NavLink = styled(Link)`
   color: #333;
   text-decoration: none;
+
   &:hover {
     text-decoration: underline;
   }

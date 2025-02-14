@@ -1,7 +1,9 @@
 import React, { useMemo } from "react";
 import styled from "styled-components";
-import { Movie } from "../MoviesContext";
+import { useMovies } from "../MoviesContext";
 import MovieCard from "./MovieCard";
+import PaginationControls from "./PaginationControls";
+import { Movie } from "../types/Movie";
 
 const ListContainer = styled.div`
   display: grid;
@@ -19,11 +21,31 @@ interface ListProps {
 const List: React.FC<ListProps> = React.memo(function List({
   movies,
 }: ListProps) {
-  const memoizedMovieCards = useMemo(() => {
-    return movies.map((movie) => <MovieCard key={movie.id} movie={movie} />);
-  }, [movies]);
+  const { currentPage, itemsPerPage, setCurrentPage } = useMovies();
 
-  return <ListContainer>{memoizedMovieCards}</ListContainer>;
+  const paginatedMovies = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return movies.slice(startIndex, startIndex + itemsPerPage);
+  }, [movies, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(movies.length / itemsPerPage);
+
+  const memoizedMovieCards = useMemo(() => {
+    return paginatedMovies.map((movie) => (
+      <MovieCard key={movie.id} movie={movie} />
+    ));
+  }, [paginatedMovies]);
+
+  return (
+    <>
+      <ListContainer>{memoizedMovieCards}</ListContainer>
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
+    </>
+  );
 });
 
 export default List;

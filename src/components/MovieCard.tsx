@@ -1,7 +1,9 @@
 import React from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { Movie, useMovies } from "../MoviesContext";
+import { useMovies } from "../MoviesContext";
+import { Movie } from "../types/Movie";
+import Button from "./common/styledButton";
 
 const MovieCardContainer = styled.div`
   display: flex;
@@ -39,21 +41,6 @@ const MovieDetail = styled.p`
   color: #666;
 `;
 
-const FavoriteButton = styled.button`
-  padding: 8px 12px;
-  background-color: #0070f3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  margin-top: 10px;
-  cursor: pointer;
-  font-size: 14px;
-
-  &:hover {
-    background-color: #0060df;
-  }
-`;
-
 interface MovieCardProps {
   movie: Movie;
 }
@@ -83,9 +70,9 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
         <MovieDetail>Year: {movie.release_year}</MovieDetail>
         <MovieDetail>Director: {movie.director}</MovieDetail>
         <MovieDetail>Rating: {movie.rating}/10</MovieDetail>
-        <FavoriteButton onClick={handleFavoriteClick}>
+        <Button onClick={handleFavoriteClick}>
           {isFavorite(movie.id) ? "Remove from Favorites" : "Add to Favorites"}
-        </FavoriteButton>
+        </Button>
       </MovieInfo>
     </MovieCardContainer>
   );
