@@ -5,6 +5,7 @@ import { MoviesProvider } from "./MoviesContext";
 import MovieDetail from "./components/MovieDetail";
 import Header from "./components/Header";
 import Home from "./components/Home";
+import Favorites from "./components/Favorites";
 import GlobalStyles from "./styles/GlobalStyles";
 import ErrorFallback from "./components/ErrorFallback";
 
@@ -13,8 +14,7 @@ function App() {
     <ErrorBoundary
       FallbackComponent={ErrorFallback}
       onReset={() => {
-        // Reset the state of your app here
-        window.location.href = '/home';
+        window.location.href = "/home";
       }}
     >
       <MoviesProvider>
@@ -24,7 +24,7 @@ function App() {
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Home />} />
           <Route path="/movie/:id" element={<MovieDetail />} />
-          <Route path="/favorites" element={"Favorites Page"} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </MoviesProvider>

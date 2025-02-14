@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import styled from "styled-components";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useMovies } from "../MoviesContext";
 
 const SearchContainer = styled.div`
@@ -33,18 +34,30 @@ const SearchButton = styled.button`
 const SearchBox: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { searchMovies } = useMovies();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     if (searchTerm.trim()) {
-      searchMovies(searchTerm);
+      try {
+        await searchMovies(searchTerm.trim());
+        if (location.pathname !== "/home") {
+          navigate("/home");
+        }
+      } catch (error) {
+        console.error("Search failed:", error);
+      }
     }
-  }, [searchTerm, searchMovies]);
+  }, [searchTerm, searchMovies, navigate, location.pathname]);
 
-  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  }, [handleSearch]);
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        handleSearch();
+      }
+    },
+    [handleSearch]
+  );
 
   return (
     <SearchContainer>
@@ -52,7 +65,7 @@ const SearchBox: React.FC = () => {
         type="text"
         placeholder="Search movies..."
         value={searchTerm}
-        onChange={(e: { target: { value: any; }; }) => setSearchTerm(e.target.value)}
+        onChange={(e) => setSearchTerm(e.target.value)}
         onKeyUp={handleKeyPress}
       />
       <SearchButton onClick={handleSearch}>Search</SearchButton>

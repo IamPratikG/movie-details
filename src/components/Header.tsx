@@ -44,14 +44,19 @@ const Header: React.FC = () => {
   return (
     <StyledHeader>
       <HeaderContent>
-        <Logo to="/" onClick={clearMovies}>Movie Gallery</Logo>
+        <Logo to="/" onClick={clearMovies}>
+          Movie Gallery
+        </Logo>
         <SearchBox />
         <Nav>
-          <NavLink to="/" onClick={clearMovies}>Home</NavLink>
+          <NavLink to="/" onClick={clearMovies}>
+            Home
+          </NavLink>
+          <NavLink to="/favorites">Favorites</NavLink>
         </Nav>
       </HeaderContent>
     </StyledHeader>
   );
 };
 
-export default React.memo(Header);
+export default Header;
