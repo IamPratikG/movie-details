@@ -23,7 +23,7 @@ const Spinner = styled.div`
 `;
 
 const Loader: React.FC = () => (
-  <LoaderContainer>
+  <LoaderContainer data-testid="spinner-container">
     <Spinner />
   </LoaderContainer>
 );
