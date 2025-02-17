@@ -14,6 +14,7 @@ type MoviesContextType = {
   movies: Movie[];
   movieMap: Record<number, Movie>;
   favorites: Movie[];
+  filteredMovies: Movie[];
   loading: boolean;
   hasSearched: boolean;
   currentPage: number;
@@ -24,6 +25,7 @@ type MoviesContextType = {
   addToFavorites: (movie: Movie) => void;
   removeFromFavorites: (movieId: number) => void;
   isFavorite: (movieId: number) => boolean;
+  setFilteredMovies: (movies: Movie[]) => void;
   setCurrentPage: (page: number) => void;
 };
 
@@ -31,6 +33,7 @@ const MoviesContext = createContext<MoviesContextType>({
   movies: [],
   movieMap: {},
   favorites: [],
+  filteredMovies: [],
   loading: false,
   hasSearched: false,
   currentPage: 1,
@@ -41,6 +44,7 @@ const MoviesContext = createContext<MoviesContextType>({
   addToFavorites: () => {},
   removeFromFavorites: () => {},
   isFavorite: () => false,
+  setFilteredMovies: () => {},
   setCurrentPage: () => {},
 });
 
@@ -49,6 +53,7 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [favorites, setFavorites] = useState<Movie[]>([]);
+  const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,7 +64,13 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
     if (storedFavorites) {
       setFavorites(JSON.parse(storedFavorites));
     }
+    setFilteredMovies(movies);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    setFilteredMovies(movies);
+  }, [movies]);
 
   const movieMap = useMemo(() => {
     const map: Record<number, Movie> = {};
@@ -86,6 +97,7 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const clearMovies = useCallback(() => {
     setMovies([]);
+    setFilteredMovies([]);
     setHasSearched(false);
     setCurrentPage(1);
   }, []);
@@ -132,6 +144,7 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
       movies,
       movieMap,
       favorites,
+      filteredMovies,
       loading,
       hasSearched,
       currentPage,
@@ -142,12 +155,14 @@ export const MoviesProvider: React.FC<{ children: React.ReactNode }> = ({
       addToFavorites,
       removeFromFavorites,
       isFavorite,
+      setFilteredMovies,
       setCurrentPage,
     }),
     [
       movies,
       movieMap,
       favorites,
+      filteredMovies,
       loading,
       hasSearched,
       currentPage,

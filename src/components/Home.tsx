@@ -27,7 +27,7 @@ const NoResultsText = styled.h2`
 `;
 
 const Home: React.FC = () => {
-  const { movies, loading, hasSearched } = useMovies();
+  const { filteredMovies, loading, hasSearched } = useMovies();
 
   if (loading) {
     return <Loader />;
@@ -41,7 +41,7 @@ const Home: React.FC = () => {
     );
   }
 
-  if (movies.length === 0) {
+  if (filteredMovies.length === 0) {
     return (
       <HomeContainer>
         <NoResultsText>No movies found</NoResultsText>
@@ -51,7 +51,7 @@ const Home: React.FC = () => {
 
   return (
     <HomeContainer>
-      <List movies={movies} />
+      <List movies={filteredMovies} />
     </HomeContainer>
   );
 };

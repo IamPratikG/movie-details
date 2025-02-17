@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { useMovies } from "../MoviesContext";
 import MovieCard from "./MovieCard";
@@ -22,6 +22,11 @@ const List: React.FC<ListProps> = React.memo(function List({
   movies,
 }: ListProps) {
   const { currentPage, itemsPerPage, setCurrentPage } = useMovies();
+
+  // Reset to page 1 when filteredMovies changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [movies, setCurrentPage]);
 
   const paginatedMovies = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;

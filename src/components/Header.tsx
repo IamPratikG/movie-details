@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import SearchBox from "./SearchBox";
 import { useMovies } from "../MoviesContext";
+import Filter from "./common/Filter";
 
 const StyledHeader = styled.header`
   position: sticky;
@@ -43,7 +44,87 @@ const NavLink = styled(Link)`
 `;
 
 const Header: React.FC = () => {
-  const { clearMovies } = useMovies();
+  const { movies, setFilteredMovies, clearMovies } = useMovies();
+
+  const location = useLocation();
+
+  // Local state for filters
+  const [selectedFilters, setSelectedFilters] = useState<
+    Record<string, (string | number)[]>
+  >({
+    Genre: [],
+    "Release Year": [],
+    Rating: [],
+  });
+
+  // Extract unique filter options
+  const genres = Array.from(new Set(movies.flatMap((movie) => movie.genres)));
+  const releaseYears = Array.from(
+    new Set(movies.map((movie) => movie.release_year))
+  ).sort((a, b) => b - a);
+
+  const ratingOptions = [...Array(10).keys()].map((rating) => `${rating + 1}+`);
+
+  const filters = {
+    Genre: genres,
+    "Release Year": releaseYears,
+    Rating: ratingOptions,
+  };
+
+  const handleFilterChange = (header: string, values: (string | number)[]) => {
+    setSelectedFilters((prev) => ({
+      ...prev,
+      [header]: values,
+    }));
+  };
+
+  const applyFilters = () => {
+    let filteredMovies = movies;
+
+    // Filter by Genre
+    if (selectedFilters.Genre.length > 0) {
+      filteredMovies = filteredMovies.filter((movie) =>
+        movie.genres.some((genre) => selectedFilters.Genre.includes(genre))
+      );
+    }
+
+    // Filter by Release Year
+    if (selectedFilters["Release Year"].length > 0) {
+      filteredMovies = filteredMovies.filter((movie) =>
+        selectedFilters["Release Year"].includes(movie.release_year)
+      );
+    }
+
+    // Filter by Rating
+    if (selectedFilters.Rating.length > 0) {
+      filteredMovies = filteredMovies.filter((movie) =>
+        selectedFilters.Rating.some(
+          (rating) => movie.rating >= parseInt(rating as string)
+        )
+      );
+    }
+
+    setFilteredMovies(filteredMovies);
+  };
+
+  useEffect(() => {
+    // If no filters are applied, show all movies
+    if (
+      selectedFilters.Genre.length === 0 &&
+      selectedFilters["Release Year"].length === 0 &&
+      selectedFilters.Rating.length === 0
+    ) {
+      setFilteredMovies(movies);
+    }
+  }, [selectedFilters, movies, setFilteredMovies]);
+
+  useEffect(() => {
+    setSelectedFilters({
+      Genre: [],
+      "Release Year": [],
+      Rating: [],
+    });
+  }, [movies]);
 
   return (
     <StyledHeader>
@@ -58,6 +139,16 @@ const Header: React.FC = () => {
           </NavLink>
           <NavLink to="/favorites">Favorites</NavLink>
         </Nav>
+
+        {/* Show Filters only on Home page */}
+        {location.pathname === "/home" && (
+          <Filter
+            filters={filters}
+            selectedValues={selectedFilters}
+            onChange={handleFilterChange}
+            onApplyFilters={applyFilters}
+          />
+        )}
       </HeaderContent>
     </StyledHeader>
   );
